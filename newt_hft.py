@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
-import requests, os, logging, argparse
+import requests, logging, argparse
 from config import *
+
+def getEndpoint(resource, dir = False):
+  return API + resource + SYSTEM + (HFTDIR if dir else '')
 
 if __name__ == '__main__':
 
@@ -20,14 +23,30 @@ if __name__ == '__main__':
     format='%(message)s', level=getattr(logging, loglevel)
   )
 
+  # get session and authenticate
   s = requests.Session()
-  username = os.environ['NEWT_USER']
-  password = os.environ['NEWT_PWD']
-  payload = 'username=' + username + '&password=' + password
-  r_auth = s.post(API + 'auth', data = payload)
+  r_auth = s.post(API + 'auth', CREDS)
   logging.debug(r_auth.content)
-  r_list = s.get(ENDPOINT)
-  logging.debug(r_list.content)
-  xfer_to = '/'.join([ENDPOINT] + args.basepath.split('/')[-3:])
+
+  # get paths and list of files to transfer
+  path_arr = args.basepath.split('/')
+  out_path = '/'.join(path_arr[-3:-1])
+  filebase = path_arr[-1]
+  files = dict(
+    (filebase + ext, open(args.basepath + ext, 'rb'))
+    for ext in ['.pdf', '.root']
+  )
+  logging.debug(files)
+
+  # make output dir on remote
+  r_mkdir = s.post(getEndpoint('command'), {
+    'executable': '/bin/mkdir -p ' + HFTDIR + out_path
+  })
+  logging.debug(r_mkdir.content)
+
+  # transfer files
+  xfer_to = getEndpoint('file', True) + out_path + '/'
   logging.debug(xfer_to)
+  r_xfer = s.put(xfer_to, files=files)
+  logging.debug(r_xfer.content)
 

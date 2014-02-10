@@ -13,3 +13,8 @@ $ source env/bin/activate
 $ pip install -r requirements.txt
 $ ./newt_hft.py -h
 ```
+
+TODO:
+
+- test on RCF
+- log to file not console
