@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import requests, logging, argparse
+from fnmatch import fnmatch
 from config import *
 
 def getEndpoint(resource, dir = False):
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
   # get paths, out path and filebase
   path_arr = args.basepath.split('/')
-  out_path = '/'.join(path_arr[-3:-1])
+  out_path = '/'.join(path_arr[-3:-1]) + '/'
   filebase = path_arr[-1]
   logging.debug('%s %s' % (out_path, filebase))
 
@@ -41,7 +42,7 @@ if __name__ == '__main__':
   logging.debug(r_mkdir.content)
 
   # transfer files
-  xfer_to = getEndpoint('file', True) + out_path + '/'
+  xfer_to = getEndpoint('file', True) + out_path
   logging.debug(xfer_to)
   for ext in ['.pdf', '.root']:
     r_xfer = s.put(xfer_to, files = {
@@ -49,3 +50,15 @@ if __name__ == '__main__':
     })
     logging.debug(r_xfer.content)
 
+  # clean up remote
+  r_ls = s.post(getEndpoint('command'), {
+    'executable': '/bin/ls ' + HFTDIR + out_path
+  })
+  logging.debug(r_ls.content)
+  newt_rm = r_ls.json()['output'].split('\n')
+  for f in newt_rm:
+    if fnmatch(f, 'newt_*'):
+      r_clean = s.post(getEndpoint('command'), {
+        'executable': '/bin/rm ' + HFTDIR + out_path + f
+      })
+      logging.debug(r_clean.content)
