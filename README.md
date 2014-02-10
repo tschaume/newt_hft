@@ -27,5 +27,5 @@ command line argument <basepath>: (e.g. output/2014/034/15034081)
 
 #### ToDo
 
-- test on RCF (beind proxy!)
+- test on RCF (behind proxy!)
 - log to file not console
