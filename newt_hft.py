@@ -28,25 +28,24 @@ if __name__ == '__main__':
   r_auth = s.post(API + 'auth', CREDS)
   logging.debug(r_auth.content)
 
-  # get paths and list of files to transfer
+  # get paths, out path and filebase
   path_arr = args.basepath.split('/')
   out_path = '/'.join(path_arr[-3:-1])
   filebase = path_arr[-1]
-  files = dict(
-    (filebase + ext, open(args.basepath + ext, 'rb'))
-    for ext in ['.pdf', '.root']
-  )
-  logging.debug(files)
+  logging.debug('%s %s' % (out_path, filebase))
 
   # make output dir on remote
   r_mkdir = s.post(getEndpoint('command'), {
-    'executable': '/bin/mkdir -p ' + HFTDIR + out_path
+    'executable': '/bin/mkdir -pv ' + HFTDIR + out_path
   })
   logging.debug(r_mkdir.content)
 
   # transfer files
   xfer_to = getEndpoint('file', True) + out_path + '/'
   logging.debug(xfer_to)
-  r_xfer = s.put(xfer_to, files=files)
-  logging.debug(r_xfer.content)
+  for ext in ['.pdf', '.root']:
+    r_xfer = s.put(xfer_to, files = {
+      filebase + ext: open(args.basepath + ext, 'rb')
+    })
+    logging.debug(r_xfer.content)
 
