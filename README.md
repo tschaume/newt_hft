@@ -11,5 +11,5 @@ NERSC's NEWT API (https://newt.nersc.gov/)
 $ virtualenv-2.7 env
 $ source env/bin/activate
 $ pip install -r requirements.txt
-$ ./newt_hft.py
+$ ./newt_hft.py -h
 ```
