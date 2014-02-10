@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import requests, logging, argparse
+from requests_toolbelt import MultipartEncoder
+import requests, logging, argparse, sys
 from fnmatch import fnmatch
 from config import *
 
@@ -45,10 +46,15 @@ if __name__ == '__main__':
   xfer_to = getEndpoint('file', True) + out_path
   logging.debug(xfer_to)
   for ext in ['.pdf', '.root']:
-    r_xfer = s.put(xfer_to, files = {
-      filebase + ext: open(args.basepath + ext, 'rb')
-    })
-    logging.debug(r_xfer.content)
+    with open(args.basepath + ext, 'rb') as fd:
+      m = MultipartEncoder([('field', 'foo'), ('file', fd)])
+      #('file', (filebase + ext, open(args.basepath + ext, 'rb'), 'text/plain')
+      #logging.debug(m.to_string())
+      r_xfer = s.put(xfer_to, data = m, headers={'Content-Type': m.content_type})
+      #filebase + ext: open(args.basepath + ext, 'rb')
+      logging.debug(r_xfer.content)
+
+  sys.exit(0)
 
   # clean up remote
   r_ls = s.post(getEndpoint('command'), {
